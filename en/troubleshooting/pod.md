@@ -63,7 +63,7 @@ Now we know "cni0" bridge has been configured an unexpected IP address. A simple
 
 ```sh
 $ ip link set cni0 down
-$ brctl delbr cni0
+$ brctl delbr cni0        #ip link delete cni0 type bridge(in case if you can't bring down the bridge)
 ```
 
 Above is an example of network configuration issue. There are also many other things may go wrong. An incomplete list of them includes
@@ -226,6 +226,14 @@ In such case, kubelet should be configured with option `--containerized` and its
       -v /etc/kubernetes/config/:/etc/kubernetes/config/ \
       -v /etc/cni/net.d/:/etc/cni/net.d/ \
       -v /opt/cni/bin/:/opt/cni/bin/ \
+```
+
+Pods in `Terminating` state should be removed after Kubelet recovery. But sometimes, the Pods may not be deleted automatically and even force deletion (`kubectl delete pods <pod> --grace-period=0 --force`) doesn't work. In such case, `finalizers` is probably the cause and remove it with `kubelet edit` could mitigate the problem.
+
+```yaml
+"finalizers": [
+  "foregroundDeletion"
+]
 ```
 
 ## Pod is running but not doing what it should do
